@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    # O projeto foi escrito e testado no Windows, com os comandos do README
+    # em PowerShell. Rodar no mesmo SO evita que um pressuposto de plataforma
+    # passe aqui e quebre no Linux.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Conferir encoding dos arquivos de texto
+        # Neste host ja surgiram ideogramas CJK acidentais em arquivo escrito
+        # com acento. Nao e erro de logica: e corrupcao de encoding, que muda
+        # o conteudo e passa despercebida. Falhar aqui e mais barato.
+        run: python tools/verificar_encoding.py
+
+      - name: Verificar que o pacote importa
+        run: python -c "import netci; print(netci.__version__)"
+
+      - name: As regras do pipeline estao declaradas
+        # Um estagio que some da tabela e um estagio que ninguem sabe que
+        # existe, e um estagio que ninguem sabe que existe nao segura nada.
+        run: python -m netci regras
+
+      - name: Rodar testes com cobertura
+        # fail_under=70 esta no pyproject.toml; cobertura abaixo derruba o build.
+        run: python -m pytest --cov=netci --cov-report=term-missing --cov-report=xml
+
+      - name: Conferir cobertura minima
+        run: python -m coverage report --fail-under=70
+
+      - name: Prova de aceite
+        # O criterio do projeto: os cinco candidatos classificados certo, os
+        # dois reprovados por motivos DISTINTOS, parada no primeiro estagio
+        # que falha, e codigo de saida coerente com o veredito. A suite prova
+        # que cada funcao funciona; isto prova que o pipeline inteiro se
+        # comporta como o README promete.
+        run: python tools/verificar_aceite.py
+
+      - name: O pipeline rejeita um candidato com erro de sintaxe
+        # Um passo isolado, e o que prova no CI que o codigo de saida
+        # funciona - e nao so que o script de aceite leu certo.
+        run: |
+          python -m netci validar dados/candidatos/switch-ruins-sintaxe.cfg --golden dados/golden/switch-core.cfg
+          if ($LASTEXITCODE -eq 0) {
+            Write-Error "um candidato com erro de sintaxe passou; o codigo de saida esta errado"
+            exit 1
+          }
+          Write-Output "ok: reprovado com codigo diferente de zero"
+
+      - name: O pipeline aprova um candidato correto
+        run: |
+          python -m netci validar dados/candidatos/switch-ok-1.cfg --golden dados/golden/switch-core.cfg
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "um candidato correto foi reprovado"
+            exit 1
+          }
+          Write-Output "ok: aprovado com codigo zero"
+
+      - name: O exemplo de relatorio esta atualizado
+        # O exemplo vai para o repositorio para ser lido sem instalar nada.
+        # Se o relatorio mudar e o arquivo nao acompanhar, ele passa a descrever
+        # um pipeline que nao existe mais - e um exemplo desatualizado e pior
+        # do que nenhum.
+        run: |
+          python tools/gerar_exemplo.py
+          git diff --exit-code -- exemplos/relatorio-ci.md

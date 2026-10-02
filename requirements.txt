@@ -1,0 +1,9 @@
+# Dependencias de desenvolvimento.
+#
+# O pacote tem ZERO dependencia de execucao. O pipeline le arquivo de texto,
+# faz aritmetica de endereco com o modulo ipaddress da biblioteca padrao e
+# compara strings. Nao ha biblioteca de rede, de SSH nem de SDK de
+# equipamento, porque o projeto nao fala com equipamento nenhum.
+
+pytest>=7.4
+pytest-cov>=4.1

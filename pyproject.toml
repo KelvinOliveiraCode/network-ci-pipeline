@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netci"
+version = "1.0.0"
+description = "Pipeline local de CI para configuracao de rede ficticia: sintaxe, regras de negocio, golden config e teste de conectividade simulado"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = [
+    "ci",
+    "rede",
+    "configuracao",
+    "validacao",
+    "golden-config",
+    "acl",
+    "spanning-tree",
+    "automacao",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Networking",
+    "Topic :: Software Development :: Quality Assurance",
+]
+# Zero dependencia de execucao. O pipeline le arquivo de texto, faz
+# aritmetica de endereco e compara strings: nada disso precisa de biblioteca.
+# Nem de rede, nem de SSH, nem de SDK de equipamento - o projeto nao fala
+# com equipamento nenhum.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+
+[project.scripts]
+netci = "netci.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.coverage.run]
+branch = true
+source = ["netci"]
+
+[tool.coverage.report]
+show_missing = true
+# O padrao do portfolio e 70%. O piso fica aqui para que uma regressao
+# derrube o build em vez de passar despercebida.
+fail_under = 70
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise SystemExit",
+    "if TYPE_CHECKING:",
+]
