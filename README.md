@@ -61,7 +61,7 @@ ESTAGIOS
   sintaxe    1 erro(s), 0 aviso(s)
   regras     nao rodou (estagio anterior reprovou)
   golden     nao rodou (estagio anterior reprovou)
-  testes     nao rodou (estagio anterior reprovou)
+  testes     nao rodou (nao solicitado: use --origem e --destino)
 
 INTERROMPIDO EM: sintaxe
 Os estagios seguintes dependem deste e nao foram executados.
@@ -169,7 +169,6 @@ E um estágio que aparece como `não rodou` diz **por quê**, em dois casos
 distintos:
 
 ```
-testes     nao rodou (estagio anterior reprovou)
 testes     nao rodou (nao solicitado: use --origem e --destino)
 ```
 
@@ -256,7 +255,17 @@ python tools/gerar_exemplo.py        # regenera o exemplo de forma determinísti
    switch-ruins-sintaxe.cfg: ['VALOR_INVALIDO']
 
 3) a regra de parada: estagios depois da falha nao rodam
+   switch-ruins-regras.cfg: rodou ['sintaxe', 'regras'], parou em regras
+   switch-ruins-sintaxe.cfg: rodou ['sintaxe'], parou em sintaxe
+
 4) o codigo de saida reflete o veredito
+   switch-ok-1.cfg              saida=0
+   switch-ok-2.cfg              saida=0
+   switch-ruins-sintaxe.cfg     saida=1
+   switch-ruins-regras.cfg      saida=1
+   pipeline completo                saida=1
+
+ok: os 5 candidatos classificados certo, os 2 reprovados por motivos distintos, parada no primeiro estagio que falha, e codigo de saida correto
 ```
 
 A metade 2 é a que importa: dois arquivos reprovados pela **mesma** regra
