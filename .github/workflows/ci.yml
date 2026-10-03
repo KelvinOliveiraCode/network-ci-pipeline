@@ -68,6 +68,9 @@ jobs:
             exit 1
           }
           Write-Output "ok: reprovado com codigo diferente de zero"
+          # O runner fecha o passo com `exit $LASTEXITCODE`; sem este exit 0 o
+          # codigo 1 esperado da CLI vira codigo do passo e o CI fica vermelho.
+          exit 0
 
       - name: O pipeline aprova um candidato correto
         run: |
