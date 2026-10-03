@@ -56,8 +56,12 @@ jobs:
 
       - name: O pipeline rejeita um candidato com erro de sintaxe
         # Um passo isolado, e o que prova no CI que o codigo de saida
-        # funciona - e nao so que o script de aceite leu certo.
+        # funciona - e nao so que o script de aceite leu certo. O
+        # `$PSNativeCommandUseErrorActionPreference` desligado e obrigatorio:
+        # no pwsh do runner um codigo de saida diferente de zero vira erro
+        # terminante e aborta o passo antes do `if` que verifica o codigo.
         run: |
+          $PSNativeCommandUseErrorActionPreference = $false
           python -m netci validar dados/candidatos/switch-ruins-sintaxe.cfg --golden dados/golden/switch-core.cfg
           if ($LASTEXITCODE -eq 0) {
             Write-Error "um candidato com erro de sintaxe passou; o codigo de saida esta errado"
